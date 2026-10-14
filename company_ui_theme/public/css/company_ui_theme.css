@@ -1,0 +1,605 @@
+/*
+ * Velza Global India — Desk theme for Frappe v16 / HRMS v16.
+ * Visual direction: "Verso Dashboard UI Design Direction — Light + Dark Themes"
+ * (Verso Product Design System). Colours, surfaces, radii and states below
+ * follow that document's semantic token model (section 10) and component
+ * rules (section 6). The --vg-* prefix is this app's namespace.
+ *
+ * Loaded through `app_include_css` in hooks.py, so it only reaches Desk pages
+ * (desk.html). Public website pages, the login page and the HRMS PWA at /hrms
+ * do not load it. Only colours, borders, radii, shadows and type weight
+ * change; layout, sizes, fields and behaviour are Frappe's own.
+ *
+ * How it is layered
+ * -----------------
+ * 1. Brand tokens (--vg-*) — the only place colours are chosen.
+ * 2. Espresso / legacy token mapping — Frappe v16 styles almost every Desk
+ *    component from semantic tokens (--surface-*, --ink-gray-*, --outline-*,
+ *    --bg-color, --btn-primary, ...). Re-pointing those at the brand tokens
+ *    themes the UI without fighting component selectors.
+ * 3. A small number of component rules for things the tokens cannot express
+ *    (selected states, gradient icon tiles, the theme toggle).
+ *
+ * Theme selection is Frappe's own: <html data-theme="light|dark">, set by
+ * frappe.ui.set_theme() from <html data-theme-mode>. company_ui_theme.js only
+ * changes data-theme-mode. Rules use :root[data-theme=...] (two attributes of
+ * specificity) so they win over Frappe's [data-theme=...] blocks without
+ * !important, and never match the `data-theme` attribute Frappe also puts on
+ * badges, buttons and theme-preview cards.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Brand tokens                                                     */
+/* ------------------------------------------------------------------ */
+
+:root {
+	/* Core identity (brand book §02) — fixed in both themes */
+	--vg-navy: #081b3b;
+	--vg-violet: #6c3bff;
+	--vg-cyan: #06c8f5;
+	--vg-blue: #1689f8;
+	--vg-white: #ffffff;
+
+	/* Signature gradient: selected actions, icon tiles, brand moments. Never text. */
+	--vg-gradient: linear-gradient(135deg, #713bff 0%, #3766f1 55%, #06c8f5 100%);
+	/* Violet → blue variant: keeps white labels readable along the whole fill */
+	--vg-gradient-nav: linear-gradient(90deg, #6c3bff 0%, #1689f8 100%);
+
+	/* Shape (§03, §06): 8px controls/menus/nav rows, 12px cards */
+	--vg-radius: 8px;
+	--vg-radius-lg: 12px;
+
+	/* Typography (§02): Inter — already bundled with Frappe, no external request */
+	--vg-font: "InterVariable", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+		"Helvetica Neue", Arial, sans-serif;
+	--font-stack: var(--vg-font);
+}
+
+/* Light — primary production theme (§04, §10). Also covers the brief
+   "automatic" state before desk.js resolves it. */
+:root:not([data-theme="dark"]) {
+	--vg-primary: #6c3bff; /* brand-primary; white text on it is 5.7:1 */
+	--vg-primary-hover: #5b2bef;
+	--vg-primary-active: #4b20d6;
+	--vg-on-primary: var(--vg-white);
+	--vg-accent: #06c8f5; /* brand-secondary: fills and markers only, never text on white */
+	--vg-accent-text: #6c3bff; /* coloured text uses violet (5.7:1 on white) */
+
+	--vg-background: #f7f9fc; /* surface-primary: page canvas */
+	--vg-surface: #ffffff; /* card surface */
+	--vg-surface-raised: #ffffff; /* surface-elevated: menus, dialogs */
+	--vg-surface-sunken: #f2f5fa; /* surface-secondary: search, filters, muted sections */
+	--vg-sidebar: #ffffff;
+	--vg-hover: #f2f5fa;
+	--vg-selected: #efeaff; /* ~8% violet tint */
+	--vg-nav-active-bg: linear-gradient(
+		90deg,
+		rgba(108, 59, 255, 0.12) 0%,
+		rgba(6, 200, 245, 0.1) 100%
+	);
+	--vg-nav-active-text: var(--vg-navy);
+	--vg-nav-active-icon: #6c3bff;
+
+	--vg-text: #0b1736; /* text-primary */
+	--vg-text-strong: #081b3b;
+	--vg-text-muted: #65728d; /* text-secondary, 4.8:1 on white */
+	--vg-text-subtle: #65728d; /* #98A2B6 is only 2.6:1, so labels stay on text-secondary */
+	--vg-text-disabled: #98a2b6; /* text-muted: tertiary info, placeholders, disabled */
+	--vg-placeholder: #98a2b6;
+
+	--vg-border: #e4e9f1; /* border-default */
+	--vg-border-strong: #dde3ec; /* input border (§06) */
+	--vg-border-input: #dde3ec;
+	--vg-input-bg: #ffffff; /* light inputs: white + #DDE3EC border */
+
+	--vg-success: #17c98b;
+	--vg-warning: #f4a340;
+	--vg-danger: #ef5b7a;
+
+	--vg-focus-ring: 0 0 0 3px rgba(108, 59, 255, 0.35);
+	/* Subtle shadow in light mode (§06) */
+	--vg-shadow: 0 1px 2px rgba(11, 23, 54, 0.04), 0 2px 8px -2px rgba(11, 23, 54, 0.06);
+	--vg-shadow-raised: 0 8px 24px -6px rgba(11, 23, 54, 0.14), 0 0 0 1px rgba(11, 23, 54, 0.04);
+}
+
+/* Dark — low-light, high-contrast companion theme (§05, §10) */
+:root[data-theme="dark"] {
+	--vg-primary: #7b4cff; /* brand-primary (dark); white text on it is 4.9:1 */
+	--vg-primary-hover: #8c63ff;
+	--vg-primary-active: #6c3bff;
+	--vg-on-primary: var(--vg-white);
+	--vg-accent: #18d4ff; /* brand-secondary (dark) */
+	--vg-accent-text: #a48bff; /* 6.5:1 on the card surface */
+
+	--vg-background: #050b1c; /* page background */
+	--vg-surface: #0b1730; /* card surface */
+	--vg-surface-raised: #101d38; /* elevated: menus, popovers, dialogs */
+	--vg-surface-sunken: #101d38; /* dark inputs use the elevated surface (§06) */
+	--vg-sidebar: #070f22;
+	--vg-hover: #15264a;
+	--vg-selected: #1b1d51; /* ~16% violet over the card surface */
+	--vg-nav-active-bg: var(--vg-gradient-nav);
+	--vg-nav-active-text: var(--vg-white);
+	--vg-nav-active-icon: var(--vg-white);
+
+	--vg-text: #f7f9ff;
+	--vg-text-strong: #ffffff;
+	--vg-text-muted: #aab4ca;
+	--vg-text-subtle: #aab4ca;
+	--vg-text-disabled: #7d89a4;
+	--vg-placeholder: #7d89a4;
+
+	--vg-border: #263653;
+	--vg-border-strong: #31446a;
+	--vg-border-input: #263653;
+	--vg-input-bg: #101d38;
+
+	--vg-success: #27dda0;
+	--vg-warning: #ffb65a;
+	--vg-danger: #ff6c8a;
+
+	--vg-focus-ring: 0 0 0 3px rgba(123, 76, 255, 0.55);
+	/* No heavy shadow in dark mode (§06) */
+	--vg-shadow: none;
+	--vg-shadow-raised: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Map Frappe v16 (Espresso + legacy) tokens onto the brand tokens  */
+/* ------------------------------------------------------------------ */
+
+:root:not([data-theme="dark"]),
+:root[data-theme="dark"] {
+	/* Primary / brand */
+	--primary: var(--vg-primary);
+	--primary-color: var(--vg-primary);
+	--brand-color: var(--vg-primary);
+	--btn-primary: var(--vg-primary);
+	--checkbox-gradient: linear-gradient(180deg, var(--vg-primary), var(--vg-primary));
+
+	/* Surfaces */
+	--surface-base: var(--vg-surface);
+	--surface-gray-1: var(--vg-surface-sunken);
+	--surface-gray-2: var(--vg-hover);
+	--surface-gray-3: var(--vg-selected);
+	--surface-sidebar: var(--vg-sidebar);
+	--surface-elevation-1: var(--vg-surface-raised);
+	--surface-elevation-2: var(--vg-surface-raised);
+	--surface-elevation-3: var(--vg-surface-raised);
+	--desk-sidebar-bg: var(--vg-sidebar);
+	--dock-bg: var(--vg-sidebar);
+
+	--bg-color: var(--vg-background);
+	--fg-color: var(--vg-surface);
+	--card-bg: var(--vg-surface);
+	--modal-bg: var(--vg-surface-raised);
+	--popover-bg: var(--vg-surface-raised);
+	--control-bg: var(--vg-surface-sunken);
+	--control-bg-on-gray: var(--vg-hover);
+	--disabled-control-bg: var(--vg-surface-sunken);
+	--fg-hover-color: var(--vg-hover);
+	--subtle-fg: var(--vg-hover);
+	--subtle-accent: var(--vg-surface-sunken);
+	--highlight-color: var(--vg-surface-sunken);
+	--sidebar-select-color: var(--vg-selected);
+	--navbar-bg: var(--vg-sidebar);
+	--btn-default-bg: var(--vg-surface-sunken);
+	--btn-default-hover-bg: var(--vg-hover);
+	--btn-ghost-hover-bg: var(--vg-hover);
+
+	/* Ink */
+	--ink-gray-5: var(--vg-text-disabled);
+	--ink-gray-6: var(--vg-text-subtle);
+	--ink-gray-7: var(--vg-text-muted);
+	--ink-gray-8: var(--vg-text);
+	--ink-gray-9: var(--vg-text-strong);
+	--text-color: var(--vg-text);
+	--heading-color: var(--vg-text-strong);
+	--text-muted: var(--vg-text-muted);
+	--text-light: var(--vg-text-subtle);
+	--disabled-text-color: var(--vg-text-disabled);
+	--placeholder-color: var(--vg-placeholder);
+
+	/* Outlines */
+	--outline-gray-1: var(--vg-border);
+	--outline-gray-2: var(--vg-border-strong);
+	--outline-elevation-1: var(--vg-border);
+	--outline-elevation-2: var(--vg-border-strong);
+	--border-color: var(--vg-border);
+	--dark-border-color: var(--vg-border-strong);
+	--table-border-color: var(--vg-border);
+	--btn-group-border-color: var(--vg-border-strong);
+
+	/* Focus: one violet ring for inputs, buttons and checkboxes */
+	--focus-default: var(--vg-focus-ring);
+	--checkbox-focus-shadow: var(--vg-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Component rules                                                  */
+/* ------------------------------------------------------------------ */
+
+/* Page shell: neutral canvas, white (light) / navy (dark) content surfaces */
+body {
+	background-color: var(--vg-background);
+	color: var(--vg-text);
+}
+
+.page-head {
+	background: var(--vg-background);
+	border-bottom-color: var(--vg-border);
+}
+
+.page-head .es-breadcrumbs {
+	color: var(--vg-text-strong);
+}
+
+/* ---- Cards: 12px radius, 1px semantic border, subtle shadow (light only) ---- */
+.frappe-card,
+.widget,
+.number-widget-box,
+.shortcut-widget-box {
+	background-color: var(--vg-surface);
+	border: 1px solid var(--vg-border);
+	border-radius: var(--vg-radius-lg);
+	box-shadow: var(--vg-shadow);
+}
+
+@media (hover: hover) {
+	.widget.shortcut-widget-box:hover,
+	.widget.links-widget-box:hover {
+		border-color: var(--vg-border-strong);
+	}
+}
+
+.widget .widget-title {
+	color: var(--vg-text-strong);
+	font-weight: 600;
+}
+
+/* ---- Sidebar ---- */
+.body-sidebar {
+	border-right: 1px solid var(--vg-border);
+}
+
+/* Active row (§03): accent edge + tint in light, violet→blue fill in dark */
+.body-sidebar .standard-sidebar-item.active-sidebar {
+	background: var(--vg-nav-active-bg);
+	box-shadow: inset 4px 0 0 var(--vg-primary);
+	border-radius: var(--vg-radius);
+}
+
+:root[data-theme="dark"] .body-sidebar .standard-sidebar-item.active-sidebar {
+	box-shadow: none;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .item-anchor {
+	color: var(--vg-nav-active-text);
+	font-weight: 500;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon {
+	color: var(--vg-nav-active-icon);
+	--icon-stroke: var(--vg-nav-active-icon);
+}
+
+.sidebar-header .header-title {
+	color: var(--vg-text-strong);
+	font-weight: 600;
+}
+
+/* ---- Dock / navigation rail: active module is a gradient icon tile ---- */
+.dock-item.active {
+	background: var(--vg-gradient);
+	color: var(--vg-white);
+	--icon-stroke: var(--vg-white);
+}
+
+/* ---- Module icons: brand duotone instead of Frappe's gray ----
+   HRMS/ERPNext module glyphs fill from --duotone-light / --duotone-dark (see
+   hrms/public/icons/module-icons.svg), so the surface holding them sets the
+   tones. Rest: violet glyph on a soft violet tint, like the mockup's nav icons.
+   Active rail tile: white glyph on the gradient, like the mockup's icon tiles. */
+:root:not([data-theme="dark"]) {
+	--vg-icon-dark: #6c3bff;
+	--vg-icon-light: #c9b8ff;
+}
+
+:root[data-theme="dark"] {
+	--vg-icon-dark: #a48bff;
+	--vg-icon-light: #3f3582;
+}
+
+:root .dock-item,
+:root .header-logo,
+:root .onboarding-step .step-icon {
+	--duotone-dark: var(--vg-icon-dark);
+	--duotone-light: var(--vg-icon-light);
+}
+
+/* Letter-less stroke icons on the rail follow the same violet */
+:root .dock-item:not(.active):not(.dock-user-button) {
+	color: var(--vg-icon-dark);
+}
+
+@media (hover: hover) {
+	:root .dock-item:not(.active):hover {
+		background: var(--vg-selected);
+	}
+}
+
+/* Beats the sprite's own `.dock-item--duotone.active` gray step */
+:root .dock-item--duotone.active {
+	--duotone-dark: var(--vg-white);
+	--duotone-light: rgba(255, 255, 255, 0.55);
+}
+
+/* The sprite lightens the header logo on hover; keep the brand tones there */
+:root .shell-header:hover .header-logo,
+:root .shell-header.hover .header-logo {
+	--duotone-light: var(--vg-icon-light);
+}
+
+/* ---- Buttons: solid violet for routine primary actions (§06) ---- */
+.btn.btn-primary {
+	background-color: var(--vg-primary);
+	border-color: var(--vg-primary);
+	color: var(--vg-on-primary);
+	border-radius: var(--vg-radius);
+	--icon-stroke: currentColor;
+	--icon-fill-bg: var(--vg-primary);
+}
+
+@media (hover: hover) {
+	.btn.btn-primary:hover {
+		background-color: var(--vg-primary-hover);
+		border-color: var(--vg-primary-hover);
+		color: var(--vg-on-primary);
+	}
+}
+
+.btn.btn-primary:focus-visible {
+	box-shadow: var(--vg-focus-ring);
+}
+
+/* Espresso buttons: only the default (gray) theme; red/danger is left alone */
+.es-button:not([data-theme]) {
+	--bt-solid-bg: var(--vg-primary);
+	--bt-solid-bg-hover: var(--vg-primary-hover);
+	--bt-solid-bg-active: var(--vg-primary-active);
+	--bt-solid-fg: var(--vg-on-primary);
+}
+
+.es-button:focus-visible {
+	outline: none;
+	box-shadow: var(--vg-focus-ring);
+}
+
+.btn:disabled,
+.btn.disabled,
+.es-button:disabled {
+	cursor: not-allowed;
+}
+
+/* ---- Inputs: light = white + #DDE3EC border; dark = elevated surface (§06) ---- */
+.frappe-control .form-control,
+.page-form .form-control,
+.modal .form-control {
+	background-color: var(--vg-input-bg);
+	border: 1px solid var(--vg-border-input);
+	border-radius: var(--vg-radius);
+}
+
+.frappe-control .form-control:focus,
+.frappe-control .form-control:focus-within,
+.page-form .form-control:focus,
+.modal .form-control:focus {
+	border-color: var(--vg-primary);
+	box-shadow: var(--vg-focus-ring);
+}
+
+/* Read-only / disabled values keep Frappe's flat look */
+.frappe-control .control-value.like-disabled-input,
+.frappe-control .form-control:disabled {
+	background-color: var(--vg-surface-sunken);
+	color: var(--vg-text-muted);
+}
+
+/* Frappe's dark.scss re-declares these on dialogs and grid rows */
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .form-in-grid {
+	--control-bg: var(--vg-input-bg);
+	--border-color: var(--vg-border);
+}
+
+:root[data-theme="dark"] .grid-body .editable-row {
+	--control-bg: var(--vg-input-bg);
+	--input-disabled-bg: var(--vg-surface);
+}
+
+/* Dark checkboxes: Frappe draws a black tick on a light fill; violet needs a white tick */
+:root[data-theme="dark"] input[type="checkbox"]:checked:not(:disabled):not(.disabled-selected) {
+	background-color: var(--vg-primary);
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 7' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4.00001L2.66667 5.80001L7 1.20001' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+		var(--checkbox-gradient);
+}
+
+/* ---- Form tabs ---- */
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	color: var(--vg-text-strong);
+	font-weight: 500;
+	border-bottom-color: var(--vg-primary);
+	box-shadow: inset 0 -1px 0 var(--vg-primary);
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:hover {
+	color: var(--vg-text);
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:focus-visible {
+	box-shadow: var(--vg-focus-ring);
+	border-radius: 4px;
+}
+
+/* Espresso tabs (reports, settings dialogs) */
+.es-tabs__indicator {
+	background-color: var(--vg-primary);
+}
+
+/* ---- List view: neutral header, restrained separators (§06 Tables) ---- */
+.frappe-list .list-row-head {
+	background-color: var(--vg-surface-sunken);
+	color: var(--vg-text-muted);
+}
+
+@media (hover: hover) {
+	.frappe-list .list-row:hover:not(.list-row-head) {
+		background-color: var(--vg-hover);
+	}
+}
+
+.frappe-list .list-row-container:has(.list-row-checkbox:checked) .list-row {
+	background-color: var(--vg-selected);
+}
+
+/* ---- Filters ---- */
+.filter-popover,
+.filter-section {
+	background-color: var(--vg-surface-raised);
+}
+
+.filter-x-button {
+	color: var(--vg-accent-text);
+}
+
+/* ---- Grid (child tables) and datatables (reports) ---- */
+.form-grid .grid-heading-row {
+	background-color: var(--vg-surface-sunken);
+	color: var(--vg-text-muted);
+}
+
+.dt-cell--header .dt-cell__content {
+	background-color: var(--vg-surface-sunken);
+	color: var(--vg-text-muted);
+}
+
+/* ---- Dialogs ---- */
+.modal-content {
+	background-color: var(--vg-surface-raised);
+	border: 1px solid var(--vg-border);
+	border-radius: var(--vg-radius-lg);
+	box-shadow: var(--vg-shadow-raised);
+}
+
+.modal-header {
+	border-bottom-color: var(--vg-border);
+}
+
+.modal-footer {
+	border-top-color: var(--vg-border);
+}
+
+/* ---- Menus / popovers: elevated surface, 8–12px radius, visible hover (§06) ---- */
+.dropdown-menu,
+.es-menu,
+.awesomplete > ul {
+	background-color: var(--vg-surface-raised);
+	border: 1px solid var(--vg-border);
+	border-radius: var(--vg-radius);
+	box-shadow: var(--vg-shadow-raised);
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus,
+.es-menu__item[data-highlighted],
+.awesomplete > ul > li[aria-selected="true"] {
+	background-color: var(--vg-hover);
+	color: var(--vg-text-strong);
+}
+
+/* ---- Notifications ---- */
+.notifications-list .notification-item.unread {
+	box-shadow: inset 3px 0 0 var(--vg-primary);
+}
+
+@media (hover: hover) {
+	.notifications-list .notification-item:hover {
+		background-color: var(--vg-hover);
+	}
+}
+
+/* ---- Empty states ---- */
+.frappe-list .no-result,
+.msg-box {
+	color: var(--vg-text-muted);
+}
+
+/* ---- Links inside content ---- */
+.form-layout a:not(.btn):not(.es-button):not(.nav-link):hover,
+.ql-editor a {
+	color: var(--vg-accent-text);
+}
+
+/* ---- Selection ---- */
+::selection {
+	background: rgba(108, 59, 255, 0.18);
+	color: var(--vg-text-strong);
+}
+
+:root[data-theme="dark"] ::selection {
+	background: rgba(123, 76, 255, 0.45);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Theme toggle (inserted by company_ui_theme.js into .page-head)   */
+/* ------------------------------------------------------------------ */
+
+.vg-theme-toggle {
+	flex: 0 0 auto;
+	margin-right: var(--margin-xs, 5px);
+	color: var(--vg-text-muted);
+}
+
+@media (hover: hover) {
+	.vg-theme-toggle:hover {
+		color: var(--vg-accent-text);
+	}
+}
+
+.vg-theme-toggle:focus-visible {
+	outline: none;
+	box-shadow: var(--vg-focus-ring);
+}
+
+/* Show the icon for the mode the button switches *to* */
+.vg-theme-toggle .vg-icon-sun,
+:root[data-theme="dark"] .vg-theme-toggle .vg-icon-moon {
+	display: none;
+}
+
+:root[data-theme="dark"] .vg-theme-toggle .vg-icon-sun {
+	display: inline-flex;
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Motion                                                           */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+	body,
+	.page-head,
+	.body-sidebar,
+	.frappe-card,
+	.widget,
+	.modal-content {
+		transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+	}
+
+	.vg-theme-toggle svg {
+		transition: transform 0.2s ease;
+	}
+
+	.vg-theme-toggle:active svg {
+		transform: rotate(-20deg);
+	}
+}

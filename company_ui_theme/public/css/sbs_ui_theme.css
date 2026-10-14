@@ -1,0 +1,621 @@
+/*
+ * SBS Water & Infra Projects Pvt. Ltd. — Desk theme for Frappe v16 / HRMS v16.
+ * Visual source: "SBS Water & Infra Projects — Brand Guidelines" (Creador
+ * Designs). Colours come from the Brand Color Palette page (p. 11), type from
+ * Brand Font Usage (p. 12), and the teal/amber/green stripe over navy from the
+ * band that closes every page of the book. The --sbs-* prefix is this theme's
+ * namespace.
+ *
+ * Selected per site (see README "Choosing a theme per site"): a site loads
+ * either this file or company_ui_theme.css, never both. Like the Velza theme,
+ * it only reaches Desk pages (desk.html); the website, login page and the HRMS
+ * PWA at /hrms do not load it. Only colours, borders, radii, shadows and type
+ * weight change; layout, sizes, fields and behaviour are Frappe's own.
+ *
+ * How it is layered
+ * -----------------
+ * 1. Brand tokens (--sbs-*) — the only place colours are chosen.
+ * 2. Espresso / legacy token mapping — Frappe v16 styles almost every Desk
+ *    component from semantic tokens (--surface-*, --ink-gray-*, --outline-*,
+ *    --bg-color, --btn-primary, ...). Re-pointing those at the brand tokens
+ *    themes the UI without fighting component selectors.
+ * 3. A small number of component rules for things the tokens cannot express
+ *    (selected states, the brand stripe, the theme toggle).
+ *
+ * Theme selection is Frappe's own: <html data-theme="light|dark">, set by
+ * frappe.ui.set_theme() from <html data-theme-mode>. sbs_ui_theme.js only
+ * changes data-theme-mode. Rules use :root[data-theme=...] so they win over
+ * Frappe's [data-theme=...] blocks without !important, and never match the
+ * `data-theme` attribute Frappe also puts on badges and buttons.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Brand tokens                                                     */
+/* ------------------------------------------------------------------ */
+
+:root {
+	/* Primary colours (p. 11) — fixed in both themes */
+	--sbs-navy: #2e4673; /* logo "SBS", wordmark, footer bar */
+	--sbs-teal: #0b7a8f; /* tagline, subtitles */
+	/* Secondary colours (p. 11): the four logo bands */
+	--sbs-sky: #2896d3;
+	--sbs-ocean: #0088a7;
+	--sbs-amber: #f3a70a;
+	--sbs-leaf: #87ad32;
+	--sbs-white: #ffffff;
+
+	/* Signature stripe: the ocean / amber / leaf band above the navy footer
+	   bar on every brand-book page. Hard stops, never a blend, never text. */
+	--sbs-stripe: linear-gradient(
+		90deg,
+		var(--sbs-ocean) 0 33.33%,
+		var(--sbs-amber) 33.33% 66.66%,
+		var(--sbs-leaf) 66.66% 100%
+	);
+
+	/* Shape: the book's panels and labels use small, soft corners */
+	--sbs-radius: 6px;
+	--sbs-radius-lg: 10px;
+
+	/* Typography (p. 12): Pangram. It is a licensed face and no font files
+	   were supplied, so it is used only if installed on the viewer's machine;
+	   otherwise Inter, which Frappe already bundles. No external request. */
+	--sbs-font: "Pangram", "Pangram Sans", "InterVariable", "Inter", -apple-system,
+		BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-stack: var(--sbs-font);
+}
+
+/* Light — primary production theme. Also covers the brief "automatic" state
+   before desk.js resolves it. */
+:root:not([data-theme="dark"]) {
+	--sbs-primary: #2e4673; /* navy; white text on it is 9.4:1 */
+	--sbs-primary-hover: #243a62;
+	--sbs-primary-active: #1c2f52;
+	--sbs-on-primary: var(--sbs-white);
+	--sbs-accent: #0b7a8f; /* teal: indicators, focus, active edges */
+	--sbs-accent-text: #0b7a8f; /* 5.0:1 on white */
+
+	--sbs-background: #f4f6f8; /* page canvas */
+	--sbs-surface: #ffffff; /* cards, lists, forms */
+	--sbs-surface-raised: #ffffff; /* menus, dialogs */
+	--sbs-surface-sunken: #eef1f4; /* search, filters, table headers */
+	--sbs-sidebar: #ffffff;
+	--sbs-hover: #eef1f4;
+	--sbs-selected: #e3f1f4; /* ~10% teal tint */
+	--sbs-nav-active-bg: #e3f1f4;
+	--sbs-nav-active-text: var(--sbs-navy);
+	--sbs-nav-active-icon: var(--sbs-teal);
+
+	/* Text colours from Brand Font Usage (p. 12) */
+	--sbs-text: #1a1a1a; /* important text */
+	--sbs-text-strong: #1a1a1a;
+	--sbs-heading: #2e4673; /* titles are navy in the book */
+	--sbs-text-muted: #4d4d4d; /* 8.5:1 on white */
+	--sbs-text-subtle: #666666; /* 5.7:1 on white */
+	--sbs-text-disabled: #8a8a8a; /* placeholders, disabled */
+	--sbs-placeholder: #8a8a8a;
+
+	--sbs-border: #e1e5ea;
+	--sbs-border-strong: #d3d9e0;
+	--sbs-border-input: #d3d9e0;
+	--sbs-input-bg: #ffffff;
+
+	/* Status tokens for new custom components (Frappe badges keep their own) */
+	--sbs-success: #6e9a22; /* leaf, darkened for text use */
+	--sbs-warning: #f3a70a; /* amber: fills only, not text on white */
+	--sbs-danger: #d64545;
+
+	--sbs-focus-ring: 0 0 0 3px rgba(11, 122, 143, 0.35);
+	--sbs-shadow: 0 1px 2px rgba(46, 70, 115, 0.05), 0 2px 8px -2px rgba(46, 70, 115, 0.08);
+	--sbs-shadow-raised: 0 8px 24px -6px rgba(46, 70, 115, 0.18), 0 0 0 1px rgba(46, 70, 115, 0.05);
+}
+
+/* Dark — low-light companion. The book has no dark spec, so this is derived
+   from the navy (surfaces) and teal (actions), keeping contrast at AA. */
+:root[data-theme="dark"] {
+	--sbs-primary: #0b7a8f; /* navy disappears on dark surfaces; teal carries actions */
+	--sbs-primary-hover: #0e889f;
+	--sbs-primary-active: #0a6b7e;
+	--sbs-on-primary: var(--sbs-white); /* 5.0:1 */
+	--sbs-accent: #4fc3dc;
+	--sbs-accent-text: #4fc3dc; /* 8.1:1 on the card surface */
+
+	--sbs-background: #0a1424;
+	--sbs-surface: #101e33;
+	--sbs-surface-raised: #16273f;
+	--sbs-surface-sunken: #16273f;
+	--sbs-sidebar: #0c1829;
+	--sbs-hover: #1b2e4a;
+	--sbs-selected: #123a4a; /* teal over the card surface */
+	--sbs-nav-active-bg: #0b7a8f;
+	--sbs-nav-active-text: var(--sbs-white);
+	--sbs-nav-active-icon: var(--sbs-white);
+
+	--sbs-text: #eef2f7;
+	--sbs-text-strong: #ffffff;
+	--sbs-heading: #ffffff;
+	--sbs-text-muted: #b3bcc9;
+	--sbs-text-subtle: #b3bcc9;
+	--sbs-text-disabled: #7f8a9a;
+	--sbs-placeholder: #7f8a9a;
+
+	--sbs-border: #24364f;
+	--sbs-border-strong: #2f4563;
+	--sbs-border-input: #2f4563;
+	--sbs-input-bg: #16273f;
+
+	--sbs-success: #9cc84a;
+	--sbs-warning: #f6b733;
+	--sbs-danger: #ff6b6b;
+
+	--sbs-focus-ring: 0 0 0 3px rgba(79, 195, 220, 0.5);
+	--sbs-shadow: none;
+	--sbs-shadow-raised: 0 8px 24px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Map Frappe v16 (Espresso + legacy) tokens onto the brand tokens  */
+/* ------------------------------------------------------------------ */
+
+:root:not([data-theme="dark"]),
+:root[data-theme="dark"] {
+	/* Primary / brand */
+	--primary: var(--sbs-primary);
+	--primary-color: var(--sbs-primary);
+	--brand-color: var(--sbs-primary);
+	--btn-primary: var(--sbs-primary);
+	--checkbox-gradient: linear-gradient(180deg, var(--sbs-primary), var(--sbs-primary));
+
+	/* Surfaces */
+	--surface-base: var(--sbs-surface);
+	--surface-gray-1: var(--sbs-surface-sunken);
+	--surface-gray-2: var(--sbs-hover);
+	--surface-gray-3: var(--sbs-selected);
+	--surface-sidebar: var(--sbs-sidebar);
+	--surface-elevation-1: var(--sbs-surface-raised);
+	--surface-elevation-2: var(--sbs-surface-raised);
+	--surface-elevation-3: var(--sbs-surface-raised);
+	--desk-sidebar-bg: var(--sbs-sidebar);
+	--dock-bg: var(--sbs-sidebar);
+
+	--bg-color: var(--sbs-background);
+	--fg-color: var(--sbs-surface);
+	--card-bg: var(--sbs-surface);
+	--modal-bg: var(--sbs-surface-raised);
+	--popover-bg: var(--sbs-surface-raised);
+	--control-bg: var(--sbs-surface-sunken);
+	--control-bg-on-gray: var(--sbs-hover);
+	--disabled-control-bg: var(--sbs-surface-sunken);
+	--fg-hover-color: var(--sbs-hover);
+	--subtle-fg: var(--sbs-hover);
+	--subtle-accent: var(--sbs-surface-sunken);
+	--highlight-color: var(--sbs-surface-sunken);
+	--sidebar-select-color: var(--sbs-selected);
+	--navbar-bg: var(--sbs-sidebar);
+	--btn-default-bg: var(--sbs-surface-sunken);
+	--btn-default-hover-bg: var(--sbs-hover);
+	--btn-ghost-hover-bg: var(--sbs-hover);
+
+	/* Ink */
+	--ink-gray-5: var(--sbs-text-disabled);
+	--ink-gray-6: var(--sbs-text-subtle);
+	--ink-gray-7: var(--sbs-text-muted);
+	--ink-gray-8: var(--sbs-text);
+	--ink-gray-9: var(--sbs-text-strong);
+	--text-color: var(--sbs-text);
+	--heading-color: var(--sbs-heading);
+	--text-muted: var(--sbs-text-muted);
+	--text-light: var(--sbs-text-subtle);
+	--disabled-text-color: var(--sbs-text-disabled);
+	--placeholder-color: var(--sbs-placeholder);
+
+	/* Outlines */
+	--outline-gray-1: var(--sbs-border);
+	--outline-gray-2: var(--sbs-border-strong);
+	--outline-elevation-1: var(--sbs-border);
+	--outline-elevation-2: var(--sbs-border-strong);
+	--border-color: var(--sbs-border);
+	--dark-border-color: var(--sbs-border-strong);
+	--table-border-color: var(--sbs-border);
+	--btn-group-border-color: var(--sbs-border-strong);
+
+	/* Focus: one teal ring for inputs, buttons and checkboxes */
+	--focus-default: var(--sbs-focus-ring);
+	--checkbox-focus-shadow: var(--sbs-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Component rules                                                  */
+/* ------------------------------------------------------------------ */
+
+body {
+	background-color: var(--sbs-background);
+	color: var(--sbs-text);
+}
+
+/* Page header carries the brand stripe along its bottom edge, like the band
+   on every brand-book page. A background layer, so it needs no positioning
+   (report pages unset the header's sticky position). */
+.page-head {
+	background: var(--sbs-stripe) left bottom / 100% 3px no-repeat, var(--sbs-background);
+	border-bottom-color: var(--sbs-border);
+}
+
+.page-head .es-breadcrumbs {
+	color: var(--sbs-heading);
+}
+
+/* ---- Cards ---- */
+.frappe-card,
+.widget,
+.number-widget-box,
+.shortcut-widget-box {
+	background-color: var(--sbs-surface);
+	border: 1px solid var(--sbs-border);
+	border-radius: var(--sbs-radius-lg);
+	box-shadow: var(--sbs-shadow);
+}
+
+@media (hover: hover) {
+	.widget.shortcut-widget-box:hover,
+	.widget.links-widget-box:hover {
+		border-color: var(--sbs-accent);
+	}
+}
+
+.widget .widget-title {
+	color: var(--sbs-heading);
+	font-weight: 600;
+}
+
+/* ---- Sidebar ---- */
+.body-sidebar {
+	border-right: 1px solid var(--sbs-border);
+}
+
+/* Active row: teal edge + teal tint in light, solid teal in dark */
+.body-sidebar .standard-sidebar-item.active-sidebar {
+	background: var(--sbs-nav-active-bg);
+	box-shadow: inset 4px 0 0 var(--sbs-accent);
+	border-radius: var(--sbs-radius);
+}
+
+:root[data-theme="dark"] .body-sidebar .standard-sidebar-item.active-sidebar {
+	box-shadow: none;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .item-anchor {
+	color: var(--sbs-nav-active-text);
+	font-weight: 500;
+}
+
+.body-sidebar .standard-sidebar-item.active-sidebar .sidebar-item-icon {
+	color: var(--sbs-nav-active-icon);
+	--icon-stroke: var(--sbs-nav-active-icon);
+}
+
+.sidebar-header .header-title {
+	color: var(--sbs-heading);
+	font-weight: 600;
+}
+
+/* ---- Dock / navigation rail: active module is a navy tile (teal in dark)
+   with the brand stripe along its foot ---- */
+.dock-item.active {
+	background:
+		var(--sbs-stripe) left bottom / 100% 3px no-repeat,
+		var(--sbs-dock-active, var(--sbs-navy));
+	color: var(--sbs-white);
+	--icon-stroke: var(--sbs-white);
+}
+
+:root[data-theme="dark"] {
+	--sbs-dock-active: var(--sbs-teal);
+}
+
+/* ---- Module icons: brand duotone instead of Frappe's gray ----
+   HRMS/ERPNext module glyphs fill from --duotone-light / --duotone-dark (see
+   hrms/public/icons/module-icons.svg). Rest: teal glyph on a soft teal tint.
+   Active rail tile: white glyph on navy/teal. */
+:root:not([data-theme="dark"]) {
+	--sbs-icon-dark: #0b7a8f;
+	--sbs-icon-light: #b7dde5;
+}
+
+:root[data-theme="dark"] {
+	--sbs-icon-dark: #4fc3dc;
+	--sbs-icon-light: #1d4e5c;
+}
+
+:root .dock-item,
+:root .header-logo,
+:root .onboarding-step .step-icon {
+	--duotone-dark: var(--sbs-icon-dark);
+	--duotone-light: var(--sbs-icon-light);
+}
+
+:root .dock-item:not(.active):not(.dock-user-button) {
+	color: var(--sbs-icon-dark);
+}
+
+@media (hover: hover) {
+	:root .dock-item:not(.active):hover {
+		background: var(--sbs-selected);
+	}
+}
+
+/* Beats the sprite's own `.dock-item--duotone.active` gray step */
+:root .dock-item--duotone.active {
+	--duotone-dark: var(--sbs-white);
+	--duotone-light: rgba(255, 255, 255, 0.55);
+}
+
+/* The sprite lightens the header logo on hover; keep the brand tones there */
+:root .shell-header:hover .header-logo,
+:root .shell-header.hover .header-logo {
+	--duotone-light: var(--sbs-icon-light);
+}
+
+/* ---- Buttons: solid navy primary (teal in dark) ---- */
+.btn.btn-primary {
+	background-color: var(--sbs-primary);
+	border-color: var(--sbs-primary);
+	color: var(--sbs-on-primary);
+	border-radius: var(--sbs-radius);
+	--icon-stroke: currentColor;
+	--icon-fill-bg: var(--sbs-primary);
+}
+
+@media (hover: hover) {
+	.btn.btn-primary:hover {
+		background-color: var(--sbs-primary-hover);
+		border-color: var(--sbs-primary-hover);
+		color: var(--sbs-on-primary);
+	}
+}
+
+.btn.btn-primary:focus-visible {
+	box-shadow: var(--sbs-focus-ring);
+}
+
+/* Espresso buttons: only the default (gray) theme; red/danger is left alone */
+.es-button:not([data-theme]) {
+	--bt-solid-bg: var(--sbs-primary);
+	--bt-solid-bg-hover: var(--sbs-primary-hover);
+	--bt-solid-bg-active: var(--sbs-primary-active);
+	--bt-solid-fg: var(--sbs-on-primary);
+}
+
+.es-button:focus-visible {
+	outline: none;
+	box-shadow: var(--sbs-focus-ring);
+}
+
+.btn:disabled,
+.btn.disabled,
+.es-button:disabled {
+	cursor: not-allowed;
+}
+
+/* ---- Inputs ---- */
+.frappe-control .form-control,
+.page-form .form-control,
+.modal .form-control {
+	background-color: var(--sbs-input-bg);
+	border: 1px solid var(--sbs-border-input);
+	border-radius: var(--sbs-radius);
+}
+
+.frappe-control .form-control:focus,
+.frappe-control .form-control:focus-within,
+.page-form .form-control:focus,
+.modal .form-control:focus {
+	border-color: var(--sbs-accent);
+	box-shadow: var(--sbs-focus-ring);
+}
+
+/* Read-only / disabled values keep Frappe's flat look */
+.frappe-control .control-value.like-disabled-input,
+.frappe-control .form-control:disabled {
+	background-color: var(--sbs-surface-sunken);
+	color: var(--sbs-text-muted);
+}
+
+/* Frappe's dark.scss re-declares these on dialogs and grid rows */
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .form-in-grid {
+	--control-bg: var(--sbs-input-bg);
+	--border-color: var(--sbs-border);
+}
+
+:root[data-theme="dark"] .grid-body .editable-row {
+	--control-bg: var(--sbs-input-bg);
+	--input-disabled-bg: var(--sbs-surface);
+}
+
+/* Dark checkboxes: Frappe draws a black tick on a light fill; teal needs a white tick */
+:root[data-theme="dark"] input[type="checkbox"]:checked:not(:disabled):not(.disabled-selected) {
+	background-color: var(--sbs-primary);
+	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 7' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4.00001L2.66667 5.80001L7 1.20001' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+		var(--checkbox-gradient);
+}
+
+/* ---- Form tabs: teal underline, like the book's teal subtitles ---- */
+.form-tabs-list .form-tabs .nav-item .nav-link.active {
+	color: var(--sbs-heading);
+	font-weight: 500;
+	border-bottom-color: var(--sbs-accent);
+	box-shadow: inset 0 -1px 0 var(--sbs-accent);
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:hover {
+	color: var(--sbs-text);
+}
+
+.form-tabs-list .form-tabs .nav-item .nav-link:focus-visible {
+	box-shadow: var(--sbs-focus-ring);
+	border-radius: 4px;
+}
+
+/* Espresso tabs (reports, settings dialogs) */
+.es-tabs__indicator {
+	background-color: var(--sbs-accent);
+}
+
+/* ---- List view ---- */
+.frappe-list .list-row-head {
+	background-color: var(--sbs-surface-sunken);
+	color: var(--sbs-text-muted);
+}
+
+@media (hover: hover) {
+	.frappe-list .list-row:hover:not(.list-row-head) {
+		background-color: var(--sbs-hover);
+	}
+}
+
+.frappe-list .list-row-container:has(.list-row-checkbox:checked) .list-row {
+	background-color: var(--sbs-selected);
+}
+
+/* ---- Filters ---- */
+.filter-popover,
+.filter-section {
+	background-color: var(--sbs-surface-raised);
+}
+
+.filter-x-button {
+	color: var(--sbs-accent-text);
+}
+
+/* ---- Grid (child tables) and datatables (reports) ---- */
+.form-grid .grid-heading-row {
+	background-color: var(--sbs-surface-sunken);
+	color: var(--sbs-text-muted);
+}
+
+.dt-cell--header .dt-cell__content {
+	background-color: var(--sbs-surface-sunken);
+	color: var(--sbs-text-muted);
+}
+
+/* ---- Dialogs ---- */
+.modal-content {
+	background-color: var(--sbs-surface-raised);
+	border: 1px solid var(--sbs-border);
+	border-radius: var(--sbs-radius-lg);
+	box-shadow: var(--sbs-shadow-raised);
+}
+
+.modal-header {
+	border-bottom-color: var(--sbs-border);
+}
+
+.modal-footer {
+	border-top-color: var(--sbs-border);
+}
+
+/* ---- Menus / popovers ---- */
+.dropdown-menu,
+.es-menu,
+.awesomplete > ul {
+	background-color: var(--sbs-surface-raised);
+	border: 1px solid var(--sbs-border);
+	border-radius: var(--sbs-radius);
+	box-shadow: var(--sbs-shadow-raised);
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus,
+.es-menu__item[data-highlighted],
+.awesomplete > ul > li[aria-selected="true"] {
+	background-color: var(--sbs-hover);
+	color: var(--sbs-text-strong);
+}
+
+/* ---- Notifications ---- */
+.notifications-list .notification-item.unread {
+	box-shadow: inset 3px 0 0 var(--sbs-accent);
+}
+
+@media (hover: hover) {
+	.notifications-list .notification-item:hover {
+		background-color: var(--sbs-hover);
+	}
+}
+
+/* ---- Empty states ---- */
+.frappe-list .no-result,
+.msg-box {
+	color: var(--sbs-text-muted);
+}
+
+/* ---- Links inside content ---- */
+.form-layout a:not(.btn):not(.es-button):not(.nav-link):hover,
+.ql-editor a {
+	color: var(--sbs-accent-text);
+}
+
+/* ---- Selection ---- */
+::selection {
+	background: rgba(11, 122, 143, 0.2);
+	color: var(--sbs-text-strong);
+}
+
+:root[data-theme="dark"] ::selection {
+	background: rgba(79, 195, 220, 0.35);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Theme toggle (inserted by sbs_ui_theme.js into .page-head)       */
+/* ------------------------------------------------------------------ */
+
+.sbs-theme-toggle {
+	flex: 0 0 auto;
+	margin-right: var(--margin-xs, 5px);
+	color: var(--sbs-text-muted);
+}
+
+@media (hover: hover) {
+	.sbs-theme-toggle:hover {
+		color: var(--sbs-accent-text);
+	}
+}
+
+.sbs-theme-toggle:focus-visible {
+	outline: none;
+	box-shadow: var(--sbs-focus-ring);
+}
+
+/* Show the icon for the mode the button switches *to* */
+.sbs-theme-toggle .sbs-icon-sun,
+:root[data-theme="dark"] .sbs-theme-toggle .sbs-icon-moon {
+	display: none;
+}
+
+:root[data-theme="dark"] .sbs-theme-toggle .sbs-icon-sun {
+	display: inline-flex;
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Motion                                                           */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+	body,
+	.page-head,
+	.body-sidebar,
+	.frappe-card,
+	.widget,
+	.modal-content {
+		transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+	}
+
+	.sbs-theme-toggle svg {
+		transition: transform 0.2s ease;
+	}
+
+	.sbs-theme-toggle:active svg {
+		transform: rotate(-20deg);
+	}
+}

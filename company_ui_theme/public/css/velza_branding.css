@@ -1,0 +1,15 @@
+/*
+ * Velza Global India — branding only (Frappe v16 Desk).
+ *
+ * Keeps the stock Desk look (colours, fonts, light/dark themes) and only makes the Velza
+ * logo files work on it. Load this instead of company_ui_theme.css when the site should use
+ * the standard UI. Logos and product names themselves come from the site's settings and the
+ * `company_ui_brand` site config (see README).
+ */
+
+/* Frappe takes one logo URL, so the black Velza logo is configured and dark mode swaps in the
+   official white file (desk loading splash). The app icon (velza-icon-circle.png) works on both
+   themes as it is. */
+:root[data-theme="dark"] img[src$="/company_ui_theme/images/velza-logo-black.png"] {
+	content: url("/assets/company_ui_theme/images/velza-logo-white.png");
+}

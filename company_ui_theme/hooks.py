@@ -5,6 +5,10 @@ app_description = "Reusable branded UI themes for company HRMS installations"
 app_email = "info@velzaglobal.in"
 app_license = "mit"
 
+# Relabels the upstream app names/logos in the Desk boot payload, only on sites whose
+# site_config.json has a `company_ui_brand` key (see boot.py).
+extend_bootinfo = "company_ui_theme.boot.extend_bootinfo"
+
 # Apps
 # ------------------
 
@@ -34,8 +38,15 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/company_ui_theme/css/company_ui_theme.css"
-# app_include_js = "/assets/company_ui_theme/js/company_ui_theme.js"
+#
+# Not set here on purpose: this app ships one theme per company and each site
+# picks exactly one in its site_config.json, which frappe/www/desk.py appends to
+# these hooks. Listing a theme here would load it on every site, on top of the
+# site's own. Themes (see README "Choosing a theme per site"):
+#   Velza: /assets/company_ui_theme/css/company_ui_theme.css + js/company_ui_theme.js
+#   SBS:   /assets/company_ui_theme/css/sbs_ui_theme.css     + js/sbs_ui_theme.js
+# app_include_css = []
+# app_include_js = []
 
 # include js, css files in header of web template
 # web_include_css = "/assets/company_ui_theme/css/company_ui_theme.css"
